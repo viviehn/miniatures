@@ -1,7 +1,7 @@
 from Phidget22.Phidget import *
 from Phidget22.Devices.Stepper import *
 from ccapi.ccapi import CCAPI
-import asyncio, time
+import asyncio, time, subprocess
 import tqdm
 
 # motor specifications
@@ -19,6 +19,11 @@ DEBUG=False
 WAIT_TO_TURN=2
 WAIT_TO_SHOOT=2
 
+# camera connection
+CANON_SSID='EOSR7_B24014-433_Canon0A'
+CANON_PWD='pFnnqvC7'
+CANON_IP='192.168.1.2'
+
 async def turn_table(delay, new_position):
     await asyncio.sleep(delay)
     print(new_position)
@@ -30,6 +35,10 @@ async def take_photo(delay):
 
 
 def main():
+
+    subprocess.call(['nmcli', 'd', 'wifi', 
+	'connect', CANON_SSID, 
+	'password', CANON_PWD])
     stepper = Stepper()
     stepper.openWaitForAttachment(5000)
     stepper.setCurrentLimit(0.67)

@@ -15,17 +15,20 @@ DEBUG=False
 WAIT_TO_TURN=3
 WAIT_TO_SHOOT=3
 
+CANON_SSID='EOSR7_B24014-433_Canon0A'
+CANON_PWD='pFnnqvC7'
+CANON_IP='192.168.1.2'
 
 def post_focus_drive(camera, step):
     camera._post(path='/ccapi/ver100/shooting/control/drivefocus',
                  json={"value": step})
 
 def main():
+    subprocess.call(['nmcli', 'd', 'wifi', 
+	'connect', CANON_SSID, 
+	'password', CANON_PWD])
 
     camera = CCAPI(debug=DEBUG)
-
-    for _ in range(30):
-        post_focus_drive(camera, 'near3')
 
     finding_starting_point = True
     init_steps = 0
