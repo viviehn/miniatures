@@ -47,7 +47,7 @@ async def turn_table(delay, new_position):
     print(new_position)
     #stepper.setTargetPosition(new_position)
 
-def take_photo():
+def take_photo(camera):
     print('take photo')
     time.sleep(WAIT_TO_SHOOT)
     camera.shoot(af=False)
@@ -81,25 +81,44 @@ def main():
                 post_focus_drive(camera, 'near3')
 
         # reset to beginning of focus for this obj
-	print("init focus")
+        print("init focus")
         for _ in range(args.num_init_steps):
             post_focus_drive(camera, 'far3')
 
         # take narrow aperture images
         print("taking narrow aperture images")
         put_av(camera, "f22")
-	take_photo()
+        take_photo(camera)
 
         # move to halfway point
         print("set focus to halfway point")
         for _ in range(int(args.num_shoot_steps/2)):
             post_focus_drive(camera, 'far3')
         print("taking narrow aperture images..")
-	take_photo()
+        take_photo(camera)
         for _ in range(int(args.num_shoot_steps/2)):
             post_focus_drive(camera, 'far3')
         print("taking narrow aperture images...")
-	take_photo()
+        take_photo(camera)
+
+        # reset to mid aperture
+        #camera.av = "f4.0"
+        print("reset focus")
+        put_av(camera, "f11")
+        for _ in range(num_back_steps):
+            post_focus_drive(camera, 'near3')
+
+        # reset to beginning of focus for this obj
+        for _ in range(args.num_init_steps):
+            post_focus_drive(camera, 'far3')
+
+        # step through focus
+        print("taking wide aperture images...")
+        for _ in range(0, args.num_shoot_steps, 2):
+            take_photo(camera)
+            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, 'far3')
+        take_photo(camera)
 
         # reset to wide aperture
         #camera.av = "f4.0"
@@ -115,7 +134,7 @@ def main():
         # step through focus
         print("taking wide aperture images...")
         for _ in range(args.num_shoot_steps):
-            take_photo()
+            take_photo(camera)
             post_focus_drive(camera, 'far3')
 
 
