@@ -20,6 +20,14 @@ WAIT_TO_TURN=2
 WAIT_TO_FOCUS=1
 WAIT_TO_SHOOT=2
 
+NEAR_STR='near1'
+FAR_STR='far1'
+
+WIDE_AV='f4.0'
+MED_AV='f8.0'
+NARROW_AV='f16'
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_init_steps', type=int, default=0)
 parser.add_argument('--num_shoot_steps', type=int, default=9)
@@ -55,8 +63,8 @@ def take_photo(camera):
 
 
 def main():
-    subprocess.call(['nmcli', 'd', 'wifi', 
-	'connect', CANON_SSID, 
+    subprocess.call(['nmcli', 'd', 'wifi',
+	'connect', CANON_SSID,
 	'password', CANON_PWD])
     stepper = Stepper()
     stepper.openWaitForAttachment(5000)
@@ -78,12 +86,12 @@ def main():
         print("pull focus near")
         if rot_iter > 0:
             for _ in range(num_back_steps):
-                post_focus_drive(camera, 'near3')
+                post_focus_drive(camera, NEAR_STR)
 
         # reset to beginning of focus for this obj
         print("init focus")
         for _ in range(args.num_init_steps):
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
 
         # take narrow aperture images
         print("taking narrow aperture images")
@@ -93,11 +101,11 @@ def main():
         # move to halfway point
         print("set focus to halfway point")
         for _ in range(int(args.num_shoot_steps/2)):
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
         print("taking narrow aperture images..")
         take_photo(camera)
         for _ in range(int(args.num_shoot_steps/2)):
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
         print("taking narrow aperture images...")
         take_photo(camera)
 
@@ -106,18 +114,18 @@ def main():
         print("reset focus")
         put_av(camera, "f11")
         for _ in range(num_back_steps):
-            post_focus_drive(camera, 'near3')
+            post_focus_drive(camera, NEAR_STR)
 
         # reset to beginning of focus for this obj
         for _ in range(args.num_init_steps):
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
 
         # step through focus
         print("taking wide aperture images...")
         for _ in range(0, args.num_shoot_steps, 2):
             take_photo(camera)
-            post_focus_drive(camera, 'far3')
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
+            post_focus_drive(camera, FAR_STR)
         take_photo(camera)
 
         # reset to wide aperture
@@ -125,17 +133,17 @@ def main():
         print("reset focus")
         put_av(camera, "f4.0")
         for _ in range(num_back_steps):
-            post_focus_drive(camera, 'near3')
+            post_focus_drive(camera, NEAR_STR)
 
         # reset to beginning of focus for this obj
         for _ in range(args.num_init_steps):
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
 
         # step through focus
         print("taking wide aperture images...")
         for _ in range(args.num_shoot_steps):
             take_photo(camera)
-            post_focus_drive(camera, 'far3')
+            post_focus_drive(camera, FAR_STR)
 
 
     stepper.close()
