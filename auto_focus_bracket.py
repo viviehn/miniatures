@@ -91,11 +91,11 @@ def main():
     subprocess.call(['nmcli', 'd', 'wifi',
                      'connect', CANON_SSID,
                      'password', CANON_PWD])
+    '''
     stepper = Stepper()
     stepper.openWaitForAttachment(5000)
     stepper.setCurrentLimit(0.67)
     stepper.setEngaged(True)
-    '''
 
     # TODO: debug check for api response
     # Wait until api response is clear before continuing?
@@ -113,28 +113,32 @@ def main():
         new_position = start_position + rot_iter*rot_degree/(RESCALE_FACTOR)
 
         num_wide_steps = args.num_shoot_steps
-        num_med_steps = int(args.num_shoot_steps // 3) + 1
+        num_med_steps = int(args.num_shoot_steps // 2)
+        if num_med_steps % 2 == 0:
+            num_med_steps = num_med_steps + 1
         #num_narrow_steps = int(args.num_shoot_steps // 9) + 1
-        num_narrow_steps = 9
+        num_narrow_steps = int(args.num_shoot_steps // 6) + 1
+        if num_narrow_steps % 2 == 0:
+            num_narrow_steps = num_narrow_steps + 1
 
-        reset_focus(camera, 10)
+        reset_focus(camera, 19)
         put_av(camera, WIDE_AV)
         print(WIDE_AV)
 
-        #stepper.setTargetPosition(new_position)
+        stepper.setTargetPosition(new_position)
         print('turning table')
-        time.sleep(WAIT_TO_TURN)
+        time.sleep(6)
 
-        configure_focus_bracketing(camera, step_size=3, num_steps=num_wide_steps)
+        configure_focus_bracketing(camera, step_size=1, num_steps=num_wide_steps)
         take_photo(camera)
 
-        reset_focus(camera, 10)
+        reset_focus(camera, 19)
         put_av(camera, MED_AV)
         print(MED_AV)
         configure_focus_bracketing(camera, step_size=1, num_steps=num_med_steps)
         take_photo(camera)
 
-        reset_focus(camera, 10)
+        reset_focus(camera, 19)
         put_av(camera, NARROW_AV)
         print(NARROW_AV)
         configure_focus_bracketing(camera, step_size=1, num_steps=num_narrow_steps)
