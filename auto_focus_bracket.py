@@ -113,11 +113,11 @@ def main():
         new_position = start_position + rot_iter*rot_degree/(RESCALE_FACTOR)
 
         num_wide_steps = args.num_shoot_steps
-        num_med_steps = int(args.num_shoot_steps // 2)
+        num_med_steps = int(args.num_shoot_steps // 2.5)
         if num_med_steps % 2 == 0:
             num_med_steps = num_med_steps + 1
         #num_narrow_steps = int(args.num_shoot_steps // 9) + 1
-        num_narrow_steps = int(args.num_shoot_steps // 6) + 1
+        num_narrow_steps = int(args.num_shoot_steps // 7.5) + 1
         if num_narrow_steps % 2 == 0:
             num_narrow_steps = num_narrow_steps + 1
 
