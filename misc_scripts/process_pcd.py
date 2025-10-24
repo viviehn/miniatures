@@ -38,19 +38,18 @@ if __name__ == '__main__':
 
     parser.add_argument('--input_file', type=str)
     parser.add_argument('--output_file', type=str)
-    parser.add_argument('--h_min', type=int, default=0)
-    parser.add_argument('--h_max', type=int, default=360)
-    parser.add_argument('--s_min', type=float, default=0)
-    parser.add_argument('--s_max', type=float, default=1)
-    parser.add_argument('--v_min', type=float, default=0)
-    parser.add_argument('--v_max', type=float, default=1)
+    parser.add_argument('--filter_colors', action='store_true')
+    parser.add_argument('--h', type=int, nargs=2, default=[100,140])
+    parser.add_argument('--s', type=float, nargs=2, default=[.05,.95])
+    parser.add_argument('--v', type=float, nargs=2, default=[.05,.95])
     parser.add_argument('--crop_bbox', action='store_true')
-    parser.add_argument('--bbox_min_x', type=float, default=0)
-    parser.add_argument('--bbox_max_x', type=float, default=1)
-    parser.add_argument('--bbox_min_y', type=float, default=0)
-    parser.add_argument('--bbox_max_y', type=float, default=0)
-    parser.add_argument('--bbox_min_z', type=float, default=1)
-    parser.add_argument('--bbox_max_z', type=float, default=1)
+    parser.add_argument('--bbox_bounds', type=float, nargs=6, default=[.2, .8, 0, .75, .2, .8])
+    parser.add_argument('--remove_stat_outliers', action='store_true')
+    parser.add_argument('--neighborhood', type=int, default=20)
+    parser.add_argument('--std_ratio', type=float, default=2.0)
+    parser.add_argument('--remove_radius_outliers', action='store_true')
+    parser.add_argument('--min_neighbors', type=int, default=16)
+    parser.add_argument('--radius', type=float, default=0.05)
 
     args = parser.parse_args()
 
@@ -60,34 +59,48 @@ if __name__ == '__main__':
     colors = np.array(pcd.colors)
     cur_pcd = pcd
 
-    hsv_min = [args.h_min, args.s_min, args.v_min]
-    hsv_max = [args.h_max, args.s_max, args.v_max]
-    print(len(points))
+    print(len(cur_pcd.points))
+    if args.filter_colors:
+        hsv_min = [args.h[0], args.s[0], args.v[0]]
+        hsv_max = [args.h[1], args.s[1], args.v[1]]
 
-    for ch in range(3):
-        cur_colors = np.array(cur_pcd.colors)
-        hsv_colors = rgb2hsv(cur_colors.reshape((cur_colors.shape[0], -1, 3)))
-        hsv_colors = hsv_colors[:,0,:]
-        new_pcd = cur_pcd.select_by_index(np.where(np.logical_and(hsv_colors[:,ch]<hsv_max[ch], hsv_colors[:,ch]>hsv_min[ch]))[0])
-        cur_pcd = new_pcd
-        print(len(cur_pcd.points))
+        for ch in range(3):
+            cur_colors = np.array(cur_pcd.colors)
+            hsv_colors = rgb2hsv(cur_colors.reshape((cur_colors.shape[0], -1, 3)))
+            hsv_colors = hsv_colors[:,0,:]
+            print(hsv_colors[:,ch].min(), hsv_colors[:,ch].max())
+            new_pcd = cur_pcd.select_by_index(np.where(np.logical_and(hsv_colors[:,ch]<=hsv_max[ch], hsv_colors[:,ch]>=hsv_min[ch]))[0])
+            cur_pcd = new_pcd
+            print(len(cur_pcd.points))
 
     
     if args.crop_bbox:
         np_points = np.array(cur_pcd.points)
-        print(np_points.shape)
-        min_bound_x = np.quantile(np_points[:,0], args.bbox_min_x, axis=0)
-        max_bound_x = np.quantile(np_points[:,0], args.bbox_max_x, axis=0)
-        min_bound_y = np.quantile(np_points[:,1], args.bbox_min_y, axis=0)
-        max_bound_y = np.quantile(np_points[:,1], args.bbox_max_y, axis=0)
-        min_bound_z = np.quantile(np_points[:,2], args.bbox_min_z, axis=0)
-        max_bound_z = np.quantile(np_points[:,2], args.bbox_max_z, axis=0)
+        min_bound_x = np.quantile(np_points[:,0], args.bbox_bounds[0], axis=0)
+        max_bound_x = np.quantile(np_points[:,0], args.bbox_bounds[1], axis=0)
+        min_bound_y = np.quantile(np_points[:,1], args.bbox_bounds[2], axis=0)
+        max_bound_y = np.quantile(np_points[:,1], args.bbox_bounds[3], axis=0)
+        min_bound_z = np.quantile(np_points[:,2], args.bbox_bounds[4], axis=0)
+        max_bound_z = np.quantile(np_points[:,2], args.bbox_bounds[5], axis=0)
         print(min_bound_x, min_bound_y, min_bound_z, max_bound_x, max_bound_y, max_bound_z)
         min_bound = np.array([min_bound_x, min_bound_y, min_bound_z])
         max_bound = np.array([max_bound_x, max_bound_y, max_bound_z])
 
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
         cur_pcd = cur_pcd.crop(bbox)
+        print(len(cur_pcd.points))
+
+    if args.remove_stat_outliers:
+        cld, idx = cur_pcd.remove_statistical_outlier(nb_neighbors=args.neighborhood,
+                                                    std_ratio=args.std_ratio)
+        new_pcd = cur_pcd.select_by_index(idx)
+        cur_pcd = new_pcd
+        print(len(cur_pcd.points))
+
+    if args.remove_radius_outliers:
+        cld, idx = cur_pcd.remove_radius_outlier(nb_points=args.min_neighbors, radius=args.radius)
+        new_pcd = cur_pcd.select_by_index(idx)
+        cur_pcd = new_pcd
         print(len(cur_pcd.points))
 
 
