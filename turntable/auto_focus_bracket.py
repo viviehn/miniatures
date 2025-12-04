@@ -48,6 +48,16 @@ def put_tv(camera, tv):
         ret = camera._put(path='/ccapi/ver100/shooting/settings/tv',
                      json={"value": tv})
 
+def disable_focus_bracketing(camera):
+    focus_api_path = '/ccapi/ver100/shooting/settings/focusbracketing'
+
+    ret = camera._put(path=f'{focus_api_path}',
+                 json={"value": "disable"})
+    while ret.status_code != 200:
+        time.sleep(.25)
+        ret = camera._put(path=f'{focus_api_path}',
+                     json={"value": "disable"})
+    
 def configure_focus_bracketing(camera, step_size=1, num_steps=49):
     focus_api_path = '/ccapi/ver100/shooting/settings/focusbracketing'
 
@@ -136,6 +146,7 @@ def main():
 
         reset_focus(camera, num_reset_steps)
         put_av(camera, WIDE_AV)
+        put_tv(camera, WIDE_EXP)
         print(WIDE_AV)
 
         stepper.setTargetPosition(new_position)
@@ -147,14 +158,22 @@ def main():
 
         reset_focus(camera, num_reset_steps)
         put_av(camera, MED_AV)
+        put_tv(camera, MED_EXP)
         print(MED_AV)
         configure_focus_bracketing(camera, step_size=1, num_steps=num_med_steps)
         take_photo(camera)
 
         reset_focus(camera, num_reset_steps)
         put_av(camera, NARROW_AV)
+        put_tv(camera, NARROW_EXP)
         print(NARROW_AV)
         configure_focus_bracketing(camera, step_size=1, num_steps=num_narrow_steps)
+        take_photo(camera)
+
+        reset_focus(camera, num_reset_steps)
+        put_av(camera, 'f32')
+        put_tv(camera, '2"')
+        disable_focus_bracketing(camera)
         take_photo(camera)
         time.sleep(WAIT_TO_TURN)
 
